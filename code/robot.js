@@ -7,7 +7,7 @@ robot_attack = null,
 group = null,
 deadAnimator = null,
 clock = null,
-period = 3, //clone a robot each period secons
+period = 0, //clone a robot each period secons
 robotTimer = 0;
 //robot_container = new THREE.Object3D;
 //robot_container.name = "container";
@@ -27,7 +27,7 @@ var currentTime = Date.now();
 
 var animation = "run";
 
-var cloner = false;
+var playing = false, cloning = false, game1 = false;
 var robots = [];
 var actions = [];
 
@@ -149,52 +149,80 @@ function animate() {
     var deltat = now - currentTime;
     currentTime = now;
 
-    clock+= 0.005;
-    robotTimer+=0.005;
-    document.getElementById("time").innerHTML = "time: "+clock;
-    document.getElementById("score").innerHTML = "score: "+hitted;
 
-    //console.log(clock);
+    if( playing == true){
+        
+        clock = clock + 0.005;
+        robotTimer+=0.005;
+        document.getElementById("time").innerHTML = "time: "+clock;
+        document.getElementById("score").innerHTML = "score: "+hitted + " RECORD: "+record;
 
-    for(var rob of robots)
-    {
-        if(rob.dead != true)
+
+        for(var rob of robots)
         {
-            rob.position.x += 0.02 * deltat;
-            if(rob.position.x > 120)
+            if(rob.dead != true)
             {
-                //rob.position.x = -70 - Math.random() * 50;
-                scene.remove(rob);
+                rob.position.x += 0.02 * deltat;
+                if(rob.position.x > 120)
+                {
+                    //rob.position.x = -70 - Math.random() * 50;
+                    scene.remove(rob);
+                }
+            }
+
+            if(rob.dead == true)
+            {
+                KF.update();
+                if((clock - rob.time) > 2)
+                    scene.remove(rob);  
             }
         }
 
-        if(rob.dead == true)
+        if(robot_idle && robot_mixer[animation])
         {
-            KF.update();
-            if((clock - rob.time) > 2)
-                scene.remove(rob);  
+            robot_mixer[animation].update(deltat * 0.001);
+        }
+        if(robots)
+        {
+            for(var rob of robots)
+            {
+                rob.mixer.update(deltat * 0.001);
+            }
+
+        }
+        if(robotTimer > period && cloning == true)// clone if there is enought time
+        {
+            console.log(period);
+            robotTimer = 0;
+            period = Math.random() * 4;
+            cloneRobot();
+        }    
+
+        if(clock > 90) //90 seconds of clonning
+        {
+            cloning = false;
+        }
+        if(clock > 93) //95 seconds until the last posible robot exits the screen
+        {
+            playing = false;
+            game1 = true;
         }
     }
-
-    if(robot_idle && robot_mixer[animation])
-    {
-        robot_mixer[animation].update(deltat * 0.001);
+    else{
+        if(hitted > record)  //new record
+        {
+            record = hitted;
+            document.getElementById("score").innerHTML = "NEW RECORD: "+record+ " CLICK START TO PLAY AGAIN";
+        }
+        if( hitted < record)
+        {
+            if(game1 == true) //display this message after the first game
+            {
+                document.getElementById("score").innerHTML = "YOUR SCORE: "+hitted+ " CLICK START TO PLAY AGAIN";
+            }
+        }
     }
-    if(newRobot)
-    {
-        newRobot.mixer.update(deltat * 0.001);
-    }
-
-    if(robotTimer > period)
-    {
-        console.log(period);
-        robotTimer = 0;
-        period = Math.random() * 4;
-        cloneRobot();
-    }    
 }
-
-
 
 function run() {
     requestAnimationFrame(function() { run(); });
@@ -297,19 +325,21 @@ function createScene(canvas) {
     raycaster = new THREE.Raycaster();
 
     document.addEventListener('mousedown', onDocumentMouseDown);
-    window.addEventListener( 'resize', onWindowResize);
 
     // Now add the group to our scene
     scene.add( root );
     createDeadAnimation();
-    clock = 0;
 }
 
-function onWindowResize()
+function start()
 {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    if(playing == false)
+    { 
+        clock = 0; //initiate time in 0
+        period = 1; //first robot
+        robotTimer = 0; //count the time for the next robot
+        hitted = 0; //hitted robots
+        playing = true; //begin to play
+        cloning  = true; //begin to clone
+    }
 }
-
-
