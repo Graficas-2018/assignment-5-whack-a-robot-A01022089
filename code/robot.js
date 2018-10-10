@@ -22,7 +22,7 @@ var robot_mixer = {};
 var deadAnimator;
 var morphs = [];
 
-var duration = 1000; // ms
+var duration = 500; // ms
 var currentTime = Date.now();
 
 var animation = "run";
@@ -198,11 +198,11 @@ function animate() {
             cloneRobot();
         }    
 
-        if(clock > 90) //90 seconds of clonning
+        if(clock > 57) //57 seconds of clonning
         {
             cloning = false;
         }
-        if(clock > 93) //95 seconds until the last posible robot exits the screen
+        if(clock > 60) //60 seconds until the last posible robot exits the screen
         {
             playing = false;
             game1 = true;
